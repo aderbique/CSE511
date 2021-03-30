@@ -15,7 +15,7 @@ INPUT_FILE_PATH = 'test_data.txt'
 ACTUAL_ROWS_IN_INPUT_FILE = 20  # Number of lines in the input file
 
 import psycopg2
-import traceback
+import traceback2 as traceback
 import testHelper
 import Interface as MyAssignment
 

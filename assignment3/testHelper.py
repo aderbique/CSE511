@@ -1,4 +1,4 @@
-import traceback
+import traceback2 as traceback
 import psycopg2
 
 RANGE_TABLE_PREFIX = 'range_part'
