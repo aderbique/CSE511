@@ -10,7 +10,9 @@ import sys
 def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection):
     cur = openconnection.cursor()
     if os.path.exists('RangeQueryOut.txt'): os.remove('RangeQueryOut.txt')
-    with open('RangeQueryOut.txt', 'w') as f: f.write('PartitionName, UserID, MovieID, Rating\n')
+    with open('RangeQueryOut.txt', 'w') as f:
+        print "Writing file"
+        f.write('PartitionName, UserID, MovieID, Rating\n')
     cur.execute("SELECT MAX(partitionnum) + 1 FROM rangeratingsmetadata;")
     range_parts = int(cur.fetchone()[0])
 
@@ -27,7 +29,8 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
 def PointQuery(ratingsTableName, ratingValue, openconnection):
     cur = openconnection.cursor()
     if os.path.exists('PointQueryOut.txt'): os.remove('PointQueryOut.txt')
-    with open('PointQueryOut.txt', 'w') as f: f.write('PartitionName, UserID, MovieID, Rating\n')
+    with open('PointQueryOut.txt', 'w') as f:
+        f.write('PartitionName, UserID, MovieID, Rating\n')
     cur.execute("SELECT MAX(partitionnum) + 1 FROM rangeratingsmetadata;")
     point_parts = int(cur.fetchone()[0])
 
