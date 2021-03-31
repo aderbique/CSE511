@@ -16,7 +16,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
 
     for part in range(range_parts):
         rq =  "SELECT 'RangeRatingsPart" + str(part) + "' AS PartitionName, UserID, MovieID, Rating " \
-              "FROM rangeratingspart" + str(part) + \
+              "FROM rangeratingspart" + str(part) + " " +\
               "WHERE rating <= " + str(ratingMaxValue) + " AND rating >= " + str(ratingMinValue)
 
         cur.execute(rq)
@@ -32,8 +32,8 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
     point_parts = int(cur.fetchone()[0])
 
     for part in range(point_parts):
-        pq = "SELECT 'RangeRatingsPart" + str(point_parts) + "' AS PartitionName, UserID, MovieID, Rating " \
-             "FROM rangeratingspart" + str(point_parts) + \
+        pq = "SELECT 'RangeRatingsPart" + str(part) + "' AS PartitionName, UserID, MovieID, Rating " \
+             "FROM rangeratingspart" + str(part) + " " + \
              "WHERE rating = " + str(ratingValue)    
         cur.execute(pq)
         result = cur.fetchall()
