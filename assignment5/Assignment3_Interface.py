@@ -27,9 +27,9 @@ def ParallelSort (InputTable, SortingColumnName, OutputTable, openconnection):
         cur.execute("CREATE TABLE SortPart{} (LIKE {})".format(thread_num, InputTable))
 
         lower, upper = sort_min+thread_num*step, sort_min+(thread_num+1)*step
-        thread = threading.Thread(target=SortHelper,args=(openconnection, thread_num, InputTable, SortingColumnName, lower, upper))
-        t.start()
-        threads_list.append(t)
+        cur_thread = threading.Thread(target=SortHelper,args=(openconnection, thread_num, InputTable, SortingColumnName, lower, upper))
+        cur_thread.start()
+        threads_list.append(cur_thread)
     [thread.join() for thread in threads_list]
     
     cur.execute("DROP TABLE IF EXISTS {}".format(OutputTable))
@@ -84,9 +84,9 @@ def ParallelJoin (InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, 
         cur.execute("CREATE TABLE JoinPart{} AS SELECT * FROM {},{} WHERE 1 = 2".format(thread_num, InputTable1, InputTable2))
 
         lower, upper = minimum + thread_num * step, minimum + (thread_num + 1) * step
-        t = threading.Thread(target=Helper,args=(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn,lower, upper, 'JoinPart'+str(thread_num)))
-        t.start()
-        threads_list.append(t)
+        cur_thread = threading.Thread(target=Helper,args=(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn,lower, upper, 'JoinPart'+str(thread_num)))
+        cur_thread.start()
+        threads_list.append(cur_thread)
     [thread.join() for thread in threads_list]
     for thread_num in range(thread_num):
         cur.execute("INSERT INTO {} SELECT * FROM JoinPart{}".format(OutputTable, thread_num))
