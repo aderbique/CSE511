@@ -8,6 +8,7 @@ import os
 import sys
 # Donot close the connection inside this file i.e. do not perform openconnection.close()
 def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection):
+    fw = open("./RangeQueryOut.txt", 'w')
     # Query Range Tables
     cur = openconnection.cursor()
     if os.path.exists('RangeQueryOut.txt'): os.remove('RangeQueryOut.txt')
@@ -22,8 +23,10 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
               "WHERE rating <= " + str(ratingMaxValue) + " AND rating >= " + str(ratingMinValue)
 
         cur.execute(rq)
-        results = cur.fetchall()
-        writeToFile('RangeQueryOut.txt', results) 
+        for result in cur:
+            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+        #results = cur.fetchall()
+        #writeToFile('RangeQueryOut.txt', results) 
 
     # Query Round Robin
     cur.execute("SELECT partitionnum FROM roundrobinratingsmetadata;")
@@ -33,12 +36,17 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
            "FROM roundrobinratingspart" + str(part) + " " + \
            "WHERE rating <= " + str(ratingMaxValue) + " AND rating >= " + str(ratingMinValue)
         cur.execute(rq)
-        results = cur.fetchall()
-        writeToFile('RangeQueryOut.txt', results)
-
+        for result in cur:
+            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+        #results = cur.fetchall()
+        #writeToFile('RangeQueryOut.txt', results)
+        
     openconnection.commit()
+    fw.close()
+    cur.close()     
 
 def PointQuery(ratingsTableName, ratingValue, openconnection):
+    fw = open("./PointQueryOut.txt", 'w')
     # Query Range Tables
     cur = openconnection.cursor()
     if os.path.exists('PointQueryOut.txt'): os.remove('PointQueryOut.txt')
@@ -52,8 +60,10 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
              "FROM rangeratingspart" + str(part) + " " + \
              "WHERE rating = " + str(ratingValue)    
         cur.execute(pq)
-        results = cur.fetchall()
-        writeToFile('PointQueryOut.txt', results) 
+        for result in cur:
+            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+        #results = cur.fetchall()
+        #writeToFile('PointQueryOut.txt', results) 
 
     # Query Round Robin
     cur.execute("SELECT partitionnum FROM roundrobinratingsmetadata;")
@@ -63,9 +73,13 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
              "FROM roundrobinratingspart" + str(part) + " " + \
              "WHERE rating = " + str(ratingValue)
         cur.execute(pq)
-        results = cur.fetchall()
-        writeToFile('PointQueryOut.txt', results)
+        for result in cur:
+            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+        #results = cur.fetchall()
+        #writeToFile('PointQueryOut.txt', results)
     openconnection.commit()
+    fw.close()
+    cur.close()    
 
 def writeToFile(filename, rows):
     f = open(filename, 'a')
