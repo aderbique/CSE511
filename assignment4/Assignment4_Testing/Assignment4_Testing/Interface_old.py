@@ -24,7 +24,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
 
         cur.execute(rq)
         for result in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+            fw.write("{0},{1},{2},{3}\n".format(part, result[0], result[1], result[2]))
         #results = cur.fetchall()
         #writeToFile('RangeQueryOut.txt', results) 
 
@@ -37,7 +37,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
            "WHERE rating <= " + str(ratingMaxValue) + " AND rating >= " + str(ratingMinValue)
         cur.execute(rq)
         for result in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+            fw.write("{0},{1},{2},{3}\n".format(part, result[0], result[1], result[2]))
         #results = cur.fetchall()
         #writeToFile('RangeQueryOut.txt', results)
         
@@ -61,7 +61,7 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
              "WHERE rating = " + str(ratingValue)    
         cur.execute(pq)
         for result in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+            fw.write("{0},{1},{2},{3}\n".format(part, result[0], result[1], result[2]))
         #results = cur.fetchall()
         #writeToFile('PointQueryOut.txt', results) 
 
@@ -74,7 +74,7 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
              "WHERE rating = " + str(ratingValue)
         cur.execute(pq)
         for result in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, result[0], result[1], result[2]))
+            fw.write("{0},{1},{2},{3}\n".format(part, result[0], result[1], result[2]))
         #results = cur.fetchall()
         #writeToFile('PointQueryOut.txt', results)
     openconnection.commit()
