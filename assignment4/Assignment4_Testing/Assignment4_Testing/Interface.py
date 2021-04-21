@@ -13,77 +13,79 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
     #with open('RangeQueryOut.txt', 'w') as f:
     #    f.write('PartitionName, UserID, MovieID, Rating\n')
     cur = openconnection.cursor()
-
-    cur.execute("select table_name from information_schema.tables where table_name like 'roundrobinratingspart%'")
+    # Query Range Tables
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'roundrobinratingspart%'")
     range_partition = []
     for item in cur:
         range_partition.append(item[0])
 
     for tablename in range_partition:
-        cur.execute("select * from {0} where rating >= {1} and rating <= {2}".format(tablename, ratingMinValue, ratingMaxValue))
+        cur.execute("SELECT * FROM {} WHERE rating >= {} and rating <= {}".format(tablename, ratingMinValue, ratingMaxValue))
         #results = cur.fetchall()
         #writeToFile('RangeQueryOut.txt', results)
         for calc in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, calc[0], calc[1], calc[2]))
+            fw.write("{},{},{},{}\n".format(tablename, calc[0], calc[1], calc[2]))
 
-    cur.execute("select * from rangeratingsmetadata")
+    cur.execute("SELECT * FROM rangeratingsmetadata")
     range_partition = []
     for item in cur:
         range_partition.append(item)
-
+    # Query Round Robin
     for item in range_partition:
         if float(item[1]) > ratingMaxValue or float(item[2]) < ratingMinValue:
             continue
         elif float(item[1]) >= ratingMinValue and float(item[2]) <= ratingMinValue:
-            cur.execute("select * from rangeratingspart{0}".format(item[0]))
+            cur.execute("SELECT * FROM rangeratingspart{}".format(item[0]))
             #results = cur.fetchall()
             #writeToFile('RangeQueryOut.txt', results)
             for calc in cur:
-                fw.write("rangeratingspart{0},{1},{2},{3}\n".format(item[0], calc[0], calc[1], calc[2]))
+                fw.write("rangeratingspart{},{},{},{}\n".format(item[0], calc[0], calc[1], calc[2]))
         else:
-            cur.execute("select * from rangeratingspart{0} where rating >= {1} and rating <= {2}".format(item[0], ratingMinValue,ratingMaxValue))
+            cur.execute("SELECT * FROM rangeratingspart{} WHERE rating >= {} and rating <= {}".format(item[0], ratingMinValue,ratingMaxValue))
             #results = cur.fetchall()
             #writeToFile('RangeQueryOut.txt', results)
             for calc in cur:
-                fw.write("rangeratingspart{0},{1},{2},{3}\n".format(item[0], calc[0], calc[1], calc[2]))
+                fw.write("rangeratingspart{},{},{},{}\n".format(item[0], calc[0], calc[1], calc[2]))
 
     fw.close()
     cur.close()
 
 def PointQuery(ratingsTableName, ratingValue, openconnection):
+    # Query Range Tables
     fw = open("./PointQueryOut.txt", 'w')
     #if os.path.exists('PointQueryOut.txt'): os.remove('PointQueryOut.txt')
     #with open('PointQueryOut.txt', 'w') as f:
     #    f.write('PartitionName, UserID, MovieID, Rating\n')
     cur = openconnection.cursor()
 
-    cur.execute("select table_name from information_schema.tables where table_name like 'roundrobinratingspart%'")
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'roundrobinratingspart%'")
     range_partition = []
     for item in cur:
         range_partition.append(item[0])
 
     for tablename in range_partition:
-        cur.execute("select * from {0} where rating = {1}".format(tablename, ratingValue))
+        cur.execute("SELECT * FROM {} WHERE rating = {}".format(tablename, ratingValue))
         #results = cur.fetchall()
         #writeToFile('PointQueryOut.txt', results)
         for calc in cur:
-            fw.write("{0},{1},{2},{3}\n".format(tablename, calc[0], calc[1], calc[2]))
+            fw.write("{},{},{},{}\n".format(tablename, calc[0], calc[1], calc[2]))
 
-    cur.execute("select * from rangeratingsmetadata")
+    cur.execute("SELECT * FROM rangeratingsmetadata")
     range_partition = []
     for item in cur:
         range_partition.append(item)
 
+    # Query Round Robin
     for item in range_partition:
         if float(item[1]) > ratingValue or float(item[2]) < ratingValue:
             continue
         else:
-            cur.execute("select * from rangeratingspart{0} where rating = {1}".format(item[0], ratingValue))
+            cur.execute("SELECT * FROM rangeratingspart{} WHERE rating = {}".format(item[0], ratingValue))
 
             #results = cur.fetchall()
             #writeToFile('PointQueryOut.txt', results)
             for calc in cur:
-                fw.write("rangeratingspart{0},{1},{2},{3}\n".format(item[0], calc[0], calc[1], calc[2]))
+                fw.write("rangeratingspart{},{},{},{}\n".format(item[0], calc[0], calc[1], calc[2]))
 
     fw.close()
     cur.close()
