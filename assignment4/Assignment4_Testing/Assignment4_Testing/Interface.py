@@ -18,7 +18,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
     for item in cur:
         range_partition.append(item[0])
 
-    for tablename in l:
+    for tablename in range_partition:
         cur.execute("select * from {0} where rating >= {1} and rating <= {2}".format(tablename, ratingMinValue, ratingMaxValue))
         results = cur.fetchall()
         writeToFile('RangeQueryOut.txt', results)
@@ -30,7 +30,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
     for item in cur:
         range_partition.append(item)
 
-    for item in l:
+    for item in range_partition:
         if float(item[1]) > ratingMaxValue or float(item[2]) < ratingMinValue:
             continue
         elif float(item[1]) >= ratingMinValue and float(item[2]) <= ratingMinValue:
@@ -46,7 +46,7 @@ def RangeQuery(ratingsTableName, ratingMinValue, ratingMaxValue, openconnection)
             #for calc in cur:
             #    fw.write("rangeratingspart{0},{1},{2},{3}\n".format(item[0], calc[0], calc[1], calc[2]))
 
-    fw.close()
+    #fw.close()
     cur.close()
 
 def PointQuery(ratingsTableName, ratingValue, openconnection):
@@ -60,7 +60,7 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
     for item in cur:
         range_partition.append(item[0])
 
-    for tablename in l:
+    for tablename in range_partition:
         cur.execute("select * from {0} where rating = {1}".format(tablename, ratingValue))
         results = cur.fetchall()
         writeToFile('PointQueryOut.txt', results)
@@ -72,7 +72,7 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
     for item in cur:
         range_partition.append(item)
 
-    for item in l:
+    for item in range_partition:
         if float(item[1]) > ratingValue or float(item[2]) < ratingValue:
             continue
         else:
@@ -83,7 +83,7 @@ def PointQuery(ratingsTableName, ratingValue, openconnection):
             #for calc in cur:
             #    fw.write("rangeratingspart{0},{1},{2},{3}\n".format(item[0], calc[0], calc[1], calc[2]))
 
-    fw.close()
+    #fw.close()
     cur.close()
 
 def writeToFile(filename, items):
