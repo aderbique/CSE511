@@ -67,41 +67,44 @@ def sortworker(start, end, first, inputTable, SortingColumn, openconnection):
     return    
 
 
-def ParallelJoin (InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, OutputTable, openconnection):
-    thread_num = 5
-    cur = openconnection.cursor()
-    
-    cur.execute("SELECT MAX({}) FROM {}".format(Table1JoinColumn, InputTable1))
-    max_sort1 = cur.fetchone()[0]
-    
-    cur.execute("SELECT MIN({}) FROM {}".format(Table1JoinColumn, InputTable1))
-    min_sort1 = cur.fetchone()[0]
-    
-    cur.execute("SELECT MAX({}) FROM {}".format(Table2JoinColumn, InputTable2))
-    max_sort2 = cur.fetchone()[0]
-    
-    cur.execute("SELECT MIN({}) FROM {}".format(Table2JoinColumn, InputTable2))
-    min_sort2 = cur.fetchone()[0]
-    
-    minimum, maximum = min(min_sort1, min_sort2), max(max_sort1, max_sort2) 
-    step = (maximum - minimum) / float(thread_num)
-    
-    cur.execute("DROP TABLE IF EXISTS {}".format(OutputTable))
-    cur.execute("CREATE TABLE {} AS SELECT * FROM {}, {} WHERE 1=2".format(OutputTable, InputTable1, InputTable2))
-    
-    threads_list = []
-    for thread_num in range(thread_num):
-
-        cur.execute("DROP TABLE IF EXISTS JoinPart{}".format(thread_num))
-        cur.execute("CREATE TABLE JoinPart{} AS SELECT * FROM {},{} WHERE 1 = 2".format(thread_num, InputTable1, InputTable2))
-
-        lower, upper = minimum + thread_num * step, minimum + (thread_num + 1) * step
-        cur_thread = threading.Thread(target=Helper,args=(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn,lower, upper, 'JoinPart'+str(thread_num)))
-        cur_thread.start()
-        threads_list.append(cur_thread)
-    [thread.join() for thread in threads_list]
-    for thread_num in range(thread_num):
-        cur.execute("INSERT INTO {} SELECT * FROM JoinPart{}".format(OutputTable, thread_num))
-        cur.execute("DROP TABLE IF EXISTS JoinPart{}".format(thread_num))
+def ParallelJoin(InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, OutputTable, openconnection):
+    # Implement ParallelJoin Here.
+    cur = openconnection.cursor();
+    cur.execute("Select min(%s) , max(%s) from %s" % (Table1JoinColumn, Table1JoinColumn, InputTable1))
+    row = cur.fetchone()
+    max_num = float(row[1])
+    min_num = float(row[0])
+    increment = (max_num - min_num) / 5.0
+    seed = min_num
+    threads2 = []
+    for i in range(1, 6):
+        t = threading.Thread(target=joinworker, args=(
+        seed, seed + increment, i, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, openconnection))
+        threads2.append(t)
+        seed += increment
+        t.start()
+    cur.execute("DROP TABLE IF EXISTS %s" % (OutputTable,))
+    cur.execute("CREATE TABLE %s AS SELECT * FROM %s,%s WHERE 1=2" % (OutputTable, InputTable1, InputTable2))
+    for i in range(0, 5):
+        threads2[i].join()
+        cur.execute("INSERT INTO %s SELECT * FROM %s%s" % (OutputTable, InputTable1, i + 1))
     cur.close()
     openconnection.commit()
+
+
+def joinworker(start, end, first, inputTable1, inputTable2, Table1JoinColumn, Table2JoinColumn, openconnection):
+    cur = openconnection.cursor()
+    cur.execute("DROP TABLE IF EXISTS %s%s" % (inputTable1, first))
+    if (first == 1):
+        cur.execute(
+            "create table %s%s AS (select * from %s inner join %s on %s.%s=%s.%s where %s.%s >= %s AND %s.%s <= %s )" % (
+            inputTable1, first, inputTable1, inputTable2, inputTable1, Table1JoinColumn, inputTable2, Table2JoinColumn,
+            inputTable1, Table1JoinColumn, start, inputTable1, Table1JoinColumn, end))
+    else:
+        cur.execute(
+            "create table %s%s AS (select * from %s inner join %s on %s.%s=%s.%s where %s.%s > %s AND %s.%s <= %s )" % (
+            inputTable1, first, inputTable1, inputTable2, inputTable1, Table1JoinColumn, inputTable2, Table2JoinColumn,
+            inputTable1, Table1JoinColumn, start, inputTable1, Table1JoinColumn, end))
+
+    cur.close()
+    return
