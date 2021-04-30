@@ -40,7 +40,7 @@ def ParallelSort (InputTable, SortingColumnName, OutputTable, openconnection):
     cur.close()
     openconnection.commit()
 
-
+    
 def Helper(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, lower, upper, JoinPart):
     cur = openconnection.cursor()
     cur.execute("INSERT INTO {0} SELECT * FROM {1} INNER JOIN {2} ON {1}.{3}={2}.{4} WHERE {1}.{3}<={5} AND {1}.{3}>={6}".format(JoinPart, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, upper, lower))
@@ -53,6 +53,18 @@ def SortHelper(openconnection, thread_num, InputTable, SortingColumnName, lower,
     else: cur.execute("INSERT INTO SortPart{0} SELECT * FROM {1} WHERE {2}>{3} AND {2}<={4} ORDER BY {2} ASC".format(thread_num, InputTable, SortingColumnName, lower, upper))
     cur.close()
     openconnection.commit()
+
+def sortworker(start, end, first, inputTable, SortingColumn, openconnection):
+    cur = openconnection.cursor()
+    cur.execute("DROP TABLE IF EXISTS %s%s" % (inputTable, first))
+    if (first == 1):
+        cur.execute("create table %s%s AS (select * from %s where %s >= %s AND %s <= %s order by %s)" % (
+        inputTable, first, inputTable, SortingColumn, start, SortingColumn, end, SortingColumn))
+    else:
+        cur.execute("create table %s%s AS (select * from %s where %s > %s AND %s <= %s order by %s)" % (
+        inputTable, first, inputTable, SortingColumn, start, SortingColumn, end, SortingColumn))
+    cur.close()
+    return    
 
 
 def ParallelJoin (InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, OutputTable, openconnection):
