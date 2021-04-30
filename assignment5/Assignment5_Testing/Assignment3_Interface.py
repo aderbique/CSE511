@@ -22,27 +22,34 @@ JOIN_COLUMN_NAME_SECOND_TABLE = 'column2'
 
 
 # Donot close the connection inside this file i.e. do not perform openconnection.close()
-def ParallelSort(InputTable, SortingColumnName, OutputTable, openconnection):
-    # Implement ParallelSort Here.
-    cur = openconnection.cursor();
-    cur.execute("Select min(%s) , max(%s) from %s" % (SortingColumnName, SortingColumnName, InputTable))
-    row = cur.fetchone()
-    max_num = float(row[1])
-    min_num = float(row[0])
-    increment = (max_num - min_num) / 5.0
-    seed = min_num
-    threads = []
-    for i in range(1, 6):
-        t = threading.Thread(target=sortworker,
-                             args=(seed, seed + increment, i, InputTable, SortingColumnName, openconnection))
-        threads.append(t)
-        seed += increment
-        t.start()
-    cur.execute("DROP TABLE IF EXISTS %s" % (OutputTable,))
-    cur.execute("CREATE TABLE %s AS SELECT * FROM %s WHERE 1=2" % (OutputTable, InputTable))
-    for i in range(0, 5):
-        threads[i].join()
-        cur.execute("INSERT INTO %s SELECT * FROM %s%s" % (OutputTable, InputTable, i + 1))
+def ParallelSort (InputTable, SortingColumnName, OutputTable, openconnection):
+    thread_num = 5
+    cur = openconnection.cursor()
+    
+    cur.execute("SELECT MAX({}) FROM {}".format(SortingColumnName, InputTable))
+    sort_max = cur.fetchone()[0]
+    
+    cur.execute("SELECT MIN({}) FROM {}".format(SortingColumnName, InputTable))
+    sort_min = cur.fetchone()[0]
+    
+    step = (sort_max - sort_min)/thread_num
+    threads_list = []
+    for thread_num in range(thread_num):
+
+        cur.execute("DROP TABLE IF EXISTS SortPart{}".format(thread_num))
+        cur.execute("CREATE TABLE SortPart{} (LIKE {})".format(thread_num, InputTable))
+
+        lower, upper = sort_min+thread_num*step, sort_min+(thread_num+1)*step
+        cur_thread = threading.Thread(target=SortHelper,args=(openconnection, thread_num, InputTable, SortingColumnName, lower, upper))
+        cur_thread.start()
+        threads_list.append(cur_thread)
+    [thread.join() for thread in threads_list]
+    
+    cur.execute("DROP TABLE IF EXISTS {}".format(OutputTable))
+    cur.execute("CREATE TABLE {} (LIKE {} )".format(OutputTable, InputTable))
+    for thread_num in range(thread_num):
+        cur.execute("INSERT INTO {} SELECT * FROM SortPart{}".format(OutputTable, thread_num))
+        cur.execute("DROP TABLE IF EXISTS SortPart{}".format(thread_num))
     cur.close()
     openconnection.commit()
 
@@ -99,7 +106,6 @@ def ParallelJoin (InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, 
         cur.execute("DROP TABLE IF EXISTS JoinPart{}".format(thread_num))
     cur.close()
     openconnection.commit()
-
 
 ################### DO NOT CHANGE ANYTHING BELOW THIS #############################
 
