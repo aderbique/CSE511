@@ -46,6 +46,11 @@ def ParallelSort(InputTable, SortingColumnName, OutputTable, openconnection):
     cur.close()
     openconnection.commit()
 
+def Helper(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, lower, upper, JoinPart):
+    cur = openconnection.cursor()
+    cur.execute("INSERT INTO {0} SELECT * FROM {1} INNER JOIN {2} ON {1}.{3}={2}.{4} WHERE {1}.{3}<={5} AND {1}.{3}>={6}".format(JoinPart, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, upper, lower))
+    cur.close()
+    openconnection.commit()
 
 def sortworker(start, end, first, inputTable, SortingColumn, openconnection):
     cur = openconnection.cursor()
@@ -61,11 +66,7 @@ def sortworker(start, end, first, inputTable, SortingColumn, openconnection):
 
 
 
-def Helper(openconnection, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, lower, upper, JoinPart):
-    cur = openconnection.cursor()
-    cur.execute("INSERT INTO {0} SELECT * FROM {1} INNER JOIN {2} ON {1}.{3}={2}.{4} WHERE {1}.{3}<={5} AND {1}.{3}>={6}".format(JoinPart, InputTable1, InputTable2, Table1JoinColumn, Table2JoinColumn, upper, lower))
-    cur.close()
-    openconnection.commit()
+
 
 def SortHelper(openconnection, thread_num, InputTable, SortingColumnName, lower, upper):
     cur = openconnection.cursor()
